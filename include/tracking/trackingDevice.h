@@ -12,7 +12,10 @@
 #include "MetroError.h"
 #include <iostream>
 #include <vector>
+#include <TransMatrix3d.h>
+
 #include "pugixml.hpp"
+#include "baseTrackingDevice.h"
 
 using namespace metro_lib;
 
@@ -25,7 +28,7 @@ enum markerIndices
 
 }  // namespace trackingParams
 
-class trackingDevice {
+class trackingDevice: public baseTrackingDevice  {
 public:
 	trackingDevice();
 	~trackingDevice();
@@ -35,13 +38,17 @@ public:
 
 	int lock();
 	int lockAndMeasureAllLocators();
+	Vector3d getTranslation(unsigned int index);
+	Matrix3x3 getRotationMatrix(unsigned int index);
+	TransMatrix3d getPose(unsigned int index);
+	bool isLocatorOK(unsigned int index);
 
 	unsigned int getNumberOfLoadedLocators();
-	LocatorResult getLocatorResultAtIndex(unsigned int index);
 
 	bool changeLocators(int tracked_object);
 
 private:
+	LocatorResult getLocatorResultAtIndex(unsigned int index);
 
 	bool addLocators(int locator_id = 0);
 

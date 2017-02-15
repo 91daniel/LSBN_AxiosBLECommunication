@@ -9,35 +9,22 @@
 #define INCLUDE_BLUETOOTH_BLUETOOTHPROTOCOL_H_
 
 
+#include <connection_status.h>
 #include "cmd_def.h"
 #include "uart.h"
+#include "tracked_objects.h"
 
 #define TRACKING_DATA_HANDLE 8
 #define OBJECT_ID_HANDLE 13
 
 class bluetoothDevice;
 
-typedef enum {
-	state_disconnected,
-	state_connected,
-} states;
-
-typedef enum {
-	object_short_pointer,
-	object_long_pointer,
-	object_robot_pointer,
-	object_suction
-} tracked_objects;
-
-
-
 void setBluetoothDevice(bluetoothDevice* device);
 bluetoothDevice* getBluetoothDevice();
 
-void changeConnectionStatus(states state);
-void messageReceived(const struct ble_msg_attributes_value_evt_t * msg);
+void change_connection_status(status new_status);
+void attribute_set(const struct ble_msg_attributes_value_evt_t * msg);
 
-bluetoothDevice* bttDevice;
 
 extern "C"{
 	void print_raw_packet(struct ble_header *hdr, unsigned char *data);

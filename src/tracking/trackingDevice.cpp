@@ -151,6 +151,31 @@ int trackingDevice::lockAndMeasureAllLocators() {
 	}
 }
 
+Vector3d trackingDevice::getTranslation(unsigned int index) {
+	LocatorResult res = getLocatorResultAtIndex(index);
+	double x,y,z;
+	res.GetTranslation(x,y,z);
+	return Vector3d(x,y,z);
+}
+
+Matrix3x3 trackingDevice::getRotationMatrix(unsigned int index) {
+	LocatorResult res = getLocatorResultAtIndex(index);
+	double r[9];
+	res.GetRotationAsMatrix(r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8]);
+	return Matrix3x3(r[0],r[1],r[2],r[3],r[4],r[5],r[6],r[7],r[8]);
+}
+
+TransMatrix3d trackingDevice::getPose(unsigned int index) {
+	Vector3d translation = getTranslation(index);
+	Matrix3x3 rotation = getRotationMatrix(index);
+	return TransMatrix3d(rotation, translation);
+}
+
+bool trackingDevice::isLocatorOK(unsigned int index) {
+	LocatorResult res = getLocatorResultAtIndex(index);
+	return res.IsOk();
+}
+
 LocatorResult trackingDevice::getLocatorResultAtIndex(unsigned int index) {
 	if (index < m_locatorResults.size()) {
 		return m_locatorResults[index];

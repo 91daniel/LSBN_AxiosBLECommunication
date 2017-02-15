@@ -8,34 +8,34 @@
 #include "bluetoothProtocol.h"
 #include "bluetoothDevice.h"
 
+bluetoothDevice* btDevice;
 
 void setBluetoothDevice(bluetoothDevice* device)
 {
-	bttDevice = device;
+	btDevice = device;
 }
 
 bluetoothDevice* getBluetoothDevice()
 {
-	return bttDevice;
+	return btDevice;
 }
 
-void changeConnectionStatus(states state)
+void change_connection_status(status new_status)
 {
-	bttDevice->change_connection_status(state);
+	btDevice->change_connection_status(new_status);
 }
 
-void messageReceived(const struct ble_msg_attributes_value_evt_t * msg)
+void attribute_set(const struct ble_msg_attributes_value_evt_t * msg)
 {
 	if (msg->handle == OBJECT_ID_HANDLE)
 	{
 		uint16 offset = msg->offset;
 		for (uint8 i = 0; i < msg->value.len; i++) // i should only take the value 0!
 		{
-			bttDevice->change_tracked_object(static_cast<tracked_objects>(msg->value.data[i]));
+			btDevice->change_tracked_object(static_cast<tracked_objects>(msg->value.data[i]));
 		}
 	}
 }
-
 
 extern "C"{
 void print_raw_packet(struct ble_header *hdr, unsigned char *data)
@@ -133,7 +133,7 @@ void ble_evt_connection_status(const struct ble_msg_connection_status_evt_t *msg
 {
 	// New connection
 	if (msg->flags & connection_connected) {
-		changeConnectionStatus(state_connected);
+		change_connection_status(status_connected);
 		printf("Connected.\n");
 	}
 	else
@@ -144,7 +144,7 @@ void ble_evt_connection_status(const struct ble_msg_connection_status_evt_t *msg
 
 void ble_evt_connection_disconnected(
 	const struct ble_msg_connection_disconnected_evt_t *msg) {
-	changeConnectionStatus(state_disconnected);
+	change_connection_status(status_disconnected);
 	printf("Connection terminated, continue advertising.\n");
 	advertiseBle();
 }
@@ -152,7 +152,7 @@ void ble_evt_connection_disconnected(
 void ble_evt_attributes_value(const struct ble_msg_attributes_value_evt_t * msg)
 {
 	printf("Local attribute value was written by a remote device.\n");
-	messageReceived(msg);
+	attribute_set(msg);
 }
 }
 

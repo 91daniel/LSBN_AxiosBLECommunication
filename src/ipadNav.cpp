@@ -25,20 +25,22 @@
 #include <TransMatrix3d.h>
 
 #include "trackingDevice.h"
+#include "trackingDeviceMock.h"
 #include "bluetoothDevice.h"
 
 INITIALIZE_EASYLOGGINGPP
 
 using namespace std;
 
+#define TRACKING_SIMULATION
 
 std::pair<bool,Vector3d> loadTipTransformation(std::string fileName) {
 	pugi::xml_document settings;
 	pugi::xml_parse_result result = settings.load_file(
 			fileName.c_str());
 	if (!result) {
-		std::cout << "ERROR: Loading tip transformation from XML failed." << std::endl;
-		std::cout << result.description() << std::endl;
+		CLOG(INFO, "default") << "ERROR: Loading tip transformation from XML failed.";
+		CLOG(INFO, "default") << result.description();
 		return std::make_pair<bool,Vector3d>(false,Vector3d(0,0,0));
 	}
 
@@ -49,37 +51,37 @@ std::pair<bool,Vector3d> loadTipTransformation(std::string fileName) {
 	return std::make_pair<bool,Vector3d>(true,Vector3d(tipTrans.x(),tipTrans.y(),tipTrans.z()));;
 }
 
-std::pair<bool, Vector3d> setTrackedTool(trackingDevice* tracking_device, tracked_objects tracked_tool_id) {
+std::pair<bool, Vector3d> setTrackedTool(baseTrackingDevice* tracking_device, tracked_objects tracked_tool) {
 
 	// We need to load the correct marker geometry & tip transformation
 	// Marker geometry
-	if (!tracking_device->changeLocators(static_cast<int>(tracked_tool_id))) {
-		cout << "ERROR: Locator administrator could not change locators.\n" << endl;
+	if (!tracking_device->changeLocators(static_cast<int>(tracked_tool))) {
+		CLOG(INFO, "default") << "ERROR: Locator administrator could not change locators.";
 		return std::make_pair<bool, Vector3d>(false, Vector3d(0,0,0));
 	}
 
 	// Tip transformation
 	std::string tipTransformationFileName;
-	if (tracked_tool_id == object_short_pointer) {
+	if (tracked_tool == object_short_pointer) {
 		tipTransformationFileName = "../Settings/tipTransformation_shortPointer.xml";
-	} else if (tracked_tool_id == object_long_pointer) {
+	} else if (tracked_tool == object_long_pointer) {
 		tipTransformationFileName = "../Settings/tipTransformation_longPointer.xml";
-	} else if (tracked_tool_id == object_robot_pointer) {
+	} else if (tracked_tool == object_robot_pointer) {
 		tipTransformationFileName = "../Settings/tipTransformation_robotPointer.xml";
-	} else if (tracked_tool_id == object_suction) {
+	} else if (tracked_tool == object_suction) {
 		tipTransformationFileName = "../Settings/tipTransformation_suction.xml";
 	} else {
-		cout << "ERROR: tracked_tool_id is not known.\n" << endl;
+		CLOG(INFO, "default") << "ERROR: tracked_tool_id is not known. Keeping last tip transformation.";
 		return std::make_pair<bool, Vector3d>(false, Vector3d(0,0,0));
 	}
 
 	std::pair<bool, Vector3d> tipTransformation = loadTipTransformation(tipTransformationFileName);
 	if(!tipTransformation.first) {
-		cout << "ERROR: Tip transformation could not be loaded.\n" << endl;
+		CLOG(INFO, "default") << "ERROR: Tip transformation could not be loaded.";
 	}
 	char msg[256];
 	sprintf(msg, "Loaded tip transformation: %s", tipTransformationFileName.c_str());
-	std::cout << msg << std::endl;
+	CLOG(INFO, "default") << msg;
 
 	return tipTransformation;
 }
@@ -98,8 +100,13 @@ int main() {
 	tracked_objects last_tracked_object = object_short_pointer;
 
 
-	trackingDevice* cambarB1 = new trackingDevice();
-	double positionArray[12], quaternion[4];
+#ifdef TRACKING_SIMULATION
+	baseTrackingDevice* cambarB1 = new trackingDeviceMock();
+#else
+	baseTrackingDevice* cambarB1 = new trackingDevice();
+#endif
+
+	double quaternion[4];
 	TransMatrix3d refPos, toolPos, toolInRef;
 
 	Vector3d tipPos, tipTransformation;
@@ -120,11 +127,12 @@ int main() {
 	bool toolVisibilities[2] = { true, true };
 
 	bluetoothDevice* btDev = new bluetoothDevice();
-	//setBluetoothDevice(btDev);
+	setBluetoothDevice(btDev);
+	btDev->initializeDevice();
 
 	// Initialize camera & bluetooth connection
 	bool couldInitializeCamera = cambarB1->initializeDevice();
-	std::pair<bool, Vector3d> trackedTool = setTrackedTool(cambarB1, btDev->currentTrackedObject());
+	std::pair<bool, Vector3d> trackedTool = setTrackedTool(cambarB1, btDev->getCurrentTrackedObject());
 	if (couldInitializeCamera && trackedTool.first) {
 		/* If initialisation of camera was correct continue
 		   measuring locators and listen to changes of the tracked object until interrupt. */
@@ -133,42 +141,35 @@ int main() {
 
 		while (true) {
 
-			if (btDev->currentTrackedObject() !=  last_tracked_object) { // if remote changed tracked object, load & set geometry of new tracked object
+			if (btDev->getCurrentTrackedObject() !=  last_tracked_object) { // if remote changed tracked object, load & set geometry of new tracked object
+				CLOG(INFO, "default") << "INFO: Remote device has changed tracked object.";
 
-				std::pair<bool, Vector3d> pair = setTrackedTool(cambarB1, btDev->currentTrackedObject());
+
+				std::pair<bool, Vector3d> pair = setTrackedTool(cambarB1, btDev->getCurrentTrackedObject());
 				if (!pair.first) {
-					std::cout << "ERROR: Tool could not be set." << std::endl;
-					break;
+					CLOG(INFO, "default") << "ERROR: Tool could not be set.";
+				} else {
+					tipTransformation = pair.second;
 				}
-				tipTransformation = pair.second;
+				last_tracked_object = btDev->getCurrentTrackedObject();
 			}
 			if (cambarB1->lockAndMeasureAllLocators()) {
-				std::cout << "ERROR: Could not measure the locators." << std::endl;
+				CLOG(INFO, "default") << "ERROR: Could not measure the locators.";
 				break;
 			}
-			LocatorResult ref = cambarB1->getLocatorResultAtIndex(
-					trackingParams::referenceIndex);
-			LocatorResult tool = cambarB1->getLocatorResultAtIndex(
-					trackingParams::toolIndex);
 
 			bluetoothDataArray[0] = startByte;
 			bluetoothDataArray[1] = 0;
 
-			if (ref.IsOk()) {
-				ref.GetTranslation(positionArray[3], positionArray[7],
-						positionArray[11]);
-				ref.GetRotationAsMatrix(positionArray[0], positionArray[1],
-						positionArray[2], positionArray[4], positionArray[5],
-						positionArray[6], positionArray[8], positionArray[9],
-						positionArray[10]);
-				refPos = TransMatrix3d(positionArray);
+			if (cambarB1->isLocatorOK(trackingParams::referenceIndex)) {
+				refPos = cambarB1->getPose(trackingParams::referenceIndex);
 				if (!toolVisibilities[trackingParams::referenceIndex]) {
-					cout << "Reference visible" << endl;
+					CLOG(INFO, "default") << "Reference visible.";
 				}
 				toolVisibilities[trackingParams::referenceIndex] = true;
 			} else {
 				if (toolVisibilities[trackingParams::referenceIndex]) {
-					cout << "Reference not visible" << endl;
+					CLOG(INFO, "default") << "Reference not visible.";
 				}
 				toolVisibilities[trackingParams::referenceIndex] = false;
 				bluetoothDataArray[1] += pow(2.f,
@@ -177,22 +178,16 @@ int main() {
 				// Set LED to red
 			}
 
-			if (tool.IsOk()) {
-				tool.GetTranslation(positionArray[3], positionArray[7],
-						positionArray[11]);
-				tool.GetRotationAsMatrix(positionArray[0], positionArray[1],
-						positionArray[2], positionArray[4], positionArray[5],
-						positionArray[6], positionArray[8], positionArray[9],
-						positionArray[10]);
-				toolPos = TransMatrix3d(positionArray);
+			if (cambarB1->isLocatorOK(trackingParams::toolIndex)) {
+				toolPos = cambarB1->getPose(trackingParams::toolIndex);
 				if (!toolVisibilities[trackingParams::toolIndex]) {
-					cout << "Tool visible" << endl;
+					CLOG(INFO, "default") << "Tool visible.";
 				}
 				toolVisibilities[trackingParams::toolIndex] = true;
 
 			} else {
 				if (toolVisibilities[trackingParams::toolIndex]) {
-					cout << "Tool not visible" << endl;
+					CLOG(INFO, "default") << "Tool not visible.";
 				}
 				toolVisibilities[trackingParams::toolIndex] = false;
 				// Set LED to red
@@ -201,7 +196,7 @@ int main() {
 				bluetoothDataArray[2] = endByte;
 			}
 
-			if (tool.IsOk() && ref.IsOk()) {
+			if (cambarB1->isLocatorOK(trackingParams::referenceIndex) && cambarB1->isLocatorOK(trackingParams::toolIndex)) {
 				refPos.invert();
 				toolInRef = refPos * toolPos;
 				tipPos = toolInRef * tipTransformation;
@@ -228,6 +223,7 @@ int main() {
 						7 * sizeof(uint16_t));
 				memcpy(&bluetoothDataArray[16], &endByte, 1);
 
+				btDev->sendPose(bluetoothDataArray, 17);
 				//btDev->sendMessage(blablabal)
 				/*if (state == state_connected) {
 
@@ -245,11 +241,9 @@ int main() {
 						<< quaternion[1] << ";" << quaternion[2] << ";"
 						<< quaternion[3];
 				}*/
-			} /*else {
-				if (state == state_connected) {
-
-				}
-			}*/
+			} else {
+				btDev->sendPose(bluetoothDataArray,3);
+			}
 		}
 	} else {
 		// Blink LED

@@ -8,8 +8,9 @@
 #ifndef BLUETOOTHDEVICE_H_
 #define BLUETOOTHDEVICE_H_
 
+#include <connection_status.h>
 #include <pthread.h>
-
+#include <mutex>
 #include <stdint.h>
 
 #include "cmd_def.h"
@@ -25,27 +26,22 @@ public:
 	void shutdownDevice();
 
 	bool sendPose(uint8_t* poseData, uint8_t length);
-	tracked_objects currentTrackedObject();
+	tracked_objects getCurrentTrackedObject();
 
-	int lock();
-
-	void change_connection_status(states new_state);
+	void change_connection_status(status new_status);
 	void change_tracked_object(tracked_objects new_tracked_object);
-
-	static void *run_ble(void *ptr);
-
-	bool isConnected;
-
 private:
-	//int lastTrackedObjectId;
+
 	char * uart_port;
-	static bool bleRunning;
-	bool read();
-	bool write();
+	std::mutex connection_status_mutex;
+	status connection_status = status_disconnected;
+	std::mutex tracked_object_mutex;
+	tracked_objects tracked_object = object_short_pointer;
+
 	void changeConnectionStatus(bool isNowConnected);
 
-	states connection_state = state_disconnected;
-	tracked_objects tracked_object = object_short_pointer;
+	static bool bleRunning;
+	static void *run_ble(void *ptr);
 
 };
 

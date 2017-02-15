@@ -10,7 +10,6 @@
 #include <pthread.h>
 #include <unistd.h>
 #include "bluetoothDevice.h"
-#include "bluetoothProtocol.h"
 
 
 bool bluetoothDevice::bleRunning = false;
@@ -25,7 +24,7 @@ void *bluetoothDevice::run_ble(void *ptr) {
 }
 
 
-bluetoothDevice::bluetoothDevice() : uart_port("/dev/ttyACM0"), isConnected(false) {
+bluetoothDevice::bluetoothDevice() : uart_port("/dev/ttyACM0") {
 }
 bluetoothDevice::~bluetoothDevice() {}
 
@@ -63,38 +62,32 @@ bool bluetoothDevice::initializeDevice() {
 void bluetoothDevice::shutdownDevice() {}
 
 bool bluetoothDevice::sendPose(uint8_t* poseData, uint8_t length) {
-	if(this->isConnected) {
+    std::lock_guard<std::mutex> lock(connection_status_mutex);
+	if(this->connection_status == status_connected) {
 		ble_cmd_attributes_send(0, TRACKING_DATA_HANDLE, length, poseData);
 		return true;
 	}
 	return false;
 }
 
-tracked_objects bluetoothDevice::currentTrackedObject() {
-	//std::lock_guard<std::mutex> lock(tracked_object_mutex);
-	//if (lastTrackedObjectId )
+tracked_objects bluetoothDevice::getCurrentTrackedObject() {
+    std::lock_guard<std::mutex> lock(tracked_object_mutex);
 	return tracked_object;
 }
 
-//void bluetoothDevice::setCurrentTrackedObject(tracked_objects blabla) {}
-
-int bluetoothDevice::lock() {}
-
-bool bluetoothDevice::read() {}
-
-bool bluetoothDevice::write() {}
-
-
-void bluetoothDevice::change_connection_status(states new_connection_state)
+void bluetoothDevice::change_connection_status(status new_connection_status)
 {
+    std::lock_guard<std::mutex> lock(connection_status_mutex);
 #ifdef _DEBUG
-	printf("DEBUG: State changed: %i --> %i\n", static_cast<int>(connection_state), static_cast<int>(new_connection_state));
+	printf("DEBUG: Connection status changed: %i --> %i\n", static_cast<int>(connection_status), static_cast<int>(new_connection_status));
 #endif
-	connection_state = new_connection_state;
+	connection_status = new_connection_status;
 }
 
 void bluetoothDevice::change_tracked_object(tracked_objects new_tracked_object)
 {
+    std::lock_guard<std::mutex> lock(tracked_object_mutex);
+
 #ifdef _DEBUG
 	printf("New tracked object %i", static_cast<int>(new_tracked_object));
 #endif
