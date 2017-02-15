@@ -1,0 +1,45 @@
+<locatordefinitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1" xsi="noNamespace" >
+  <locator id="EMG_PROBE" >
+    <parameter>
+      <min_targets>5</min_targets>
+      <matching_threshold>0.5</matching_threshold>
+    </parameter>
+    <targets>
+      <target id="0" >
+        <position>
+          <x>0</x>
+          <y>0</y>
+          <z>0</z>
+        </position>
+      </target>
+      <target id="1" >
+        <position>
+          <x>14.18776415369258</x>
+          <y>1.387778780781446e-016</y>
+          <z>-4.440892098500626e-016</z>
+        </position>
+      </target>
+      <target id="2" >
+        <position>
+          <x>27.55888776498253</x>
+          <y>24.96293725216609</y>
+          <z>-8.881784197001252e-016</z>
+        </position>
+      </target>
+      <target id="3" >
+        <position>
+          <x>8.211158366715566</x>
+          <y>33.6240954360418</y>
+          <z>0.04744178598756266</z>
+        </position>
+      </target>
+      <target id="4" >
+        <position>
+          <x>21.20367515270714</x>
+          <y>43.15148909797816</y>
+          <z>0.01878026905097574</z>
+        </position>
+      </target>
+    </targets>
+  </locator>
+</locatordefinitions>

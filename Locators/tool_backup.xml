@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- all units are mm -->
+<!-- Format version -->
+<locatordefinitions version="1" >
+<locator id="TOOL_CALIBRATED" >
+<parameter>
+<min_targets>5</min_targets>
+<matching_threshold>0.1</matching_threshold>
+</parameter>
+<targets>
+<target id="0" >
+<position>
+<y>-19.9192</y>
+<x>4.10508</x>
+<z>-10.3</z>
+</position>
+</target>
+<target id="1" >
+<position>
+<y>-19.925</y>
+<x>-14.3653</x>
+<z>-5.19167</z>
+</position>
+</target>
+<target id="2" >
+<position>
+<y>-19.9482</y>
+<x>15.2514</x>
+<z>14.6351</z>
+</position>
+</target>
+<target id="3" >
+<position>
+<y>-19.9657</y>
+<x>-14.1602</x>
+<z>29.8077</z>
+</position>
+</target>
+<target id="4" >
+<position>
+<y>-19.9773</y>
+<x>0.398167</x>
+<z>39.7225</z>
+</position>
+</target>
+</targets>
+</locator>
+</locatordefinitions>

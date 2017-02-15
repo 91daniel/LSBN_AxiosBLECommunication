@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<locatorPaths>
+	<locatorPath>../Locators/tool.xml</locatorPath>
+	<locatorPath>../Locators/reference.xml</locatorPath>
+	<locatorPath>../Locators/verification.xml</locatorPath>
+</locatorPaths>
+
