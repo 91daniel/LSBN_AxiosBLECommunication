@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<locatorPaths>
-	<locatorPath>../Locators/tool.xml</locatorPath>
+<shortPointerLocatorPaths>
+	<locatorPath>../Locators/tool_shortPointer.xml</locatorPath>
 	<locatorPath>../Locators/reference.xml</locatorPath>
 	<locatorPath>../Locators/verification.xml</locatorPath>
-</locatorPaths>
-
+</shortPointerLocatorPaths>
+<longPointerLocatorPaths>
+	<locatorPath>../Locators/tool_longPointer.xml</locatorPath>
+	<locatorPath>../Locators/reference.xml</locatorPath>
+	<locatorPath>../Locators/verification.xml</locatorPath>
+</longPointerLocatorPaths>
+<robotPointerLocatorPaths>
+	<locatorPath>../Locators/tool_robotPointer.xml</locatorPath>
+	<locatorPath>../Locators/reference.xml</locatorPath>
+	<locatorPath>../Locators/verification.xml</locatorPath>
+</robotPointerLocatorPaths>
+<suctionLocatorPaths>
+	<locatorPath>../Locators/tool_suction.xml</locatorPath>
+	<locatorPath>../Locators/reference.xml</locatorPath>
+	<locatorPath>../Locators/verification.xml</locatorPath>
+</suctionLocatorPaths>

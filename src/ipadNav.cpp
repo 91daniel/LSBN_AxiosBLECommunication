@@ -270,9 +270,9 @@ std::pair<bool, Vector3d> setTrackedTool(trackingDevice* tracking_device, tracke
 
 int main() {
 	// Configure Loggers
-	el::Configurations conf_defaultLogger("logging/defaultLogger.conf");
-	el::Configurations conf_encodedDataLogger("logging/encodedDataLogger.conf");
-	el::Configurations conf_rawDataLogger("logging/rawDataLogger.conf");
+	el::Configurations conf_defaultLogger("../logging/defaultLogger.conf");
+	el::Configurations conf_encodedDataLogger("../logging/encodedDataLogger.conf");
+	el::Configurations conf_rawDataLogger("../logging/rawDataLogger.conf");
 	el::Loggers::reconfigureLogger("default", conf_defaultLogger); // Default logger
 	el::Loggers::reconfigureLogger("encoded_data", conf_encodedDataLogger); // Logging encoded tracking data to file
 	el::Loggers::reconfigureLogger("raw_data", conf_rawDataLogger); // Logging raw tracking data to file
